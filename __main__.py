@@ -194,7 +194,7 @@ while True:
         UP_CLASSES = [3]
         DOWN_CLASSES = [1,2,5,4,0]
         dvel = 10
-        thresh = 0.7
+        thresh = 0.5
         face_expressions = face_expression_extractor.get_face_expression_vectors(bounding_boxes)
         paddle1_vel,paddle2_vel = 0,0
         #print('   ---')
