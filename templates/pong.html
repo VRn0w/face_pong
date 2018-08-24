@@ -138,6 +138,7 @@
   <script src="{{ url_for('static', filename='js/game.js') }}" type="text/javascript"></script> 
   <script src="{{ url_for('static', filename='js/pong.js') }}" type="text/javascript"></script>
   <script type="text/javascript">
+  let pong = '';
   Game.ready(function() {
 
     var size        = document.getElementById('size');
@@ -146,7 +147,7 @@
     var footprints  = document.getElementById('footprints');
     var predictions = document.getElementById('predictions');
 
-    var pong = Game.start('game', Pong, {
+    pong = Game.start('game', Pong, {
       sound:       sound.checked,
       stats:       stats.checked,
       footprints:  footprints.checked,
@@ -235,6 +236,17 @@
             if (data.length > 1) {
               window.chart_right.data.datasets[0].data = data[1];
               window.chart_right.update();
+            }
+
+            if(data.length > 0){
+              if(data[0][3] > 0.5){
+                pong.leftPaddle.stopMovingDown();
+                pong.leftPaddle.moveUp();
+              }
+              else{
+                pong.leftPaddle.stopMovingUp();
+                pong.leftPaddle.moveDown();
+              }
             }
         });
       }
