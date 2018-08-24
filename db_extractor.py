@@ -1,3 +1,4 @@
+from __future__ import print_function
 """ https://www.kaggle.com/c/challenges-in-representation-learning-facial-expression-recognition-challenge/ """
 
 import csv
@@ -25,7 +26,7 @@ def printStats():
         labels = {}
         emotions_count = np.zeros((7,),np.int32)
         for i,row in enumerate(reader):
-            if i == 0: print row
+            if i == 0: print(row)
             if i>0:
                 if row[2] not in labels:
                     labels[row[2]] = 1
@@ -35,7 +36,7 @@ def printStats():
                 emotions_count[int(row[0])] +=1
 
         for i in range(7):
-            print emotions[i],'\t',emotions_count[i]/float(emotions_count.sum())
+            print(emotions[i],'\t',emotions_count[i]/float(emotions_count.sum()))
 
         """
         ['emotion', 'pixels', 'Usage']
@@ -67,7 +68,7 @@ def saveImages(output_directory = directory_fer2013 + 'images/', dtype = 'png'):
                 fn_image = output_directory + usage + '_' + str(i) + '_' + emotions[int(emotion)]   + '.' + dtype
                 image = np.array(pixels_string.split(' '),dtype = np.uint8).reshape((48,48))
                 cv2.imwrite(fn_image, image)
-                print i, 'saved image to',fn_image
+                print(i, 'saved image to',fn_image)
 
 if __name__ == '__main__':
     
@@ -77,5 +78,5 @@ if __name__ == '__main__':
     if writeImages:
         saveImages()
     else:
-        print 'not writing images!'
+        print('not writing images!')
         
