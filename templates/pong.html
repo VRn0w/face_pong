@@ -123,6 +123,12 @@
     <img id="video_right" src="{{ url_for('video_feed_right') }}">
   </div>
 
+  <div id="logo_wrapper">
+    <img src="{{url_for('static',filename='images/logo_nhs.jpg')}}" style="width: 600px; height: 125px">
+    <img src="{{url_for('static',filename='images/logo_vrnow.jpg')}}" style="width: 250px; height: 250px">
+    <img src="{{url_for('static',filename='images/logo_km.jpg')}}" style="width: 600px; height: 125px">
+  </div>
+
   <script type="text/javascript">
     // images
     var url_press1 = "{{ url_for('static', filename='images/press1.png') }}";
