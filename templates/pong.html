@@ -171,7 +171,7 @@
   
   <script type="text/javascript">
     var horizontalBarChartData = {
-      labels: ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'],
+      labels: ['Wut', 'Ekel', 'Angst', 'Froh', 'Trauer', 'Überraschung', 'Neutral'],
       datasets: [{
         backgroundColor: 'white',
         borderColor: 'white',
@@ -234,24 +234,36 @@
       for (;;) {
         await sleep(100);
         $.get("expressions", function( data ) {
-            data = JSON.parse(data)
-            if (data.length > 0) {
-              window.chart_left.data.datasets[0].data = data[0];
-              window.chart_left.update();
-            }
-            if (data.length > 1) {
-              window.chart_right.data.datasets[0].data = data[1];
-              window.chart_right.update();
-            }
-
-            if(data.length > 0){
-              if(data[0][3] > 0.5){
-                pong.leftPaddle.stopMovingDown();
-                pong.leftPaddle.moveUp();
+            if(data){
+              data = JSON.parse(data);
+              if (data.length > 0) {
+                window.chart_left.data.datasets[0].data = data[0];
+                window.chart_left.update();
               }
-              else{
-                pong.leftPaddle.stopMovingUp();
-                pong.leftPaddle.moveDown();
+              if (data.length > 1) {
+                window.chart_right.data.datasets[0].data = data[1];
+                window.chart_right.update();
+              }
+
+              if(data.length > 0){
+                if(data[0][3] > 0.5){
+                  pong.leftPaddle.stopMovingDown();
+                  pong.leftPaddle.moveUp();
+                }
+                else{
+                  pong.leftPaddle.stopMovingUp();
+                  pong.leftPaddle.moveDown();
+                }
+              }
+              if(data.length >= 2){
+                if(data[1][3] > 0.5){
+                  pong.rightPaddle.stopMovingDown();
+                  pong.rightPaddle.moveUp();
+                }
+                else{
+                  pong.rightPaddle.stopMovingUp();
+                  pong.rightPaddle.moveDown();
+                }
               }
             }
         });
@@ -274,6 +286,45 @@
     });
     */
     //let ws = new WebSocket('ws://localhost:6000');
+
+  let img_left = document.getElementById('video_left');
+  let img_right = document.getElementById('video_right');
+  let imgs = [img_left,img_right];
+  let robot_urls = {
+    'twinks': "{{ url_for('static', filename='images/robot/twinks.jpg') }}",
+    'happys': "{{ url_for('static', filename='images/robot/happys.jpg') }}",
+    'smiles': "{{ url_for('static', filename='images/robot/smiles.jpg') }}",
+    'sads': "{{ url_for('static', filename='images/robot/sads.jpg') }}",
+    'surpriseds': "{{ url_for('static', filename='images/robot/surpriseds.jpg') }}",
+    'angrys': "{{ url_for('static', filename='images/robot/angrys.jpg') }}",
+    'neutrals': "{{ url_for('static', filename='images/robot/questionmarks.jpg') }}",
+  };
+  let date = new Date();
+  function show_robot_face(direction=0,player=0,number_ballcontacts = 0){
+    let icon_ids = ['sads','surpriseds','angrys'];
+    // direction 0 == up
+    if(direction==0){
+      // up faces are happy 
+      icon_ids = ['twinks','happys','smiles'];
+    }
+    if(direction==-1){
+      icon_ids = ['neutrals','neutrals','neutrals'];
+    }
+    // take random emotion image
+    //let icon_id = icon_ids[Math.floor(Math.random() * icon_ids.length)  ];
+
+    // take image based on modulo time to minimize rapid random blinking
+    //let time_idx = parseInt(date.getTime() / 1000)%icon_ids.length;
+    //let icon_id = icon_ids[time_idx];
+
+    // take number of ball contacts mod number images
+    let icon_id = icon_ids[ number_ballcontacts % 3 ];
+
+    // change url of image for new image
+    imgs[player].src = robot_urls[icon_id];
+    //console.log('[ROBOT] change icon for player',player,'to',icon_id,'(',robot_urls[icon_id],')');
+  }
+
   </script>  
 
 </body> 
