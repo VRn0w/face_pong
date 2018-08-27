@@ -1,5 +1,5 @@
 
-from playground.ops import layers
+#from playground.ops import layers
 
 import tensorflow as tf 
 

@@ -2,7 +2,7 @@
 from importlib import import_module
 import os
 from flask import Flask, render_template, Response
-from flask_socketio import SocketIO
+#from flask_socketio import SocketIO
 
 import numpy as np 
 import cv2
@@ -14,12 +14,12 @@ stream_mutex = Lock()
 last_frame = None
 img_right = np.zeros(shape=(160, 160, 3))
 
-import websocket
+#import websocket
 app = Flask(__name__)
 #socketio = SocketIO(app)
 #from views import index
 
-from flask_socketio import send, emit
+#from flask_socketio import send, emit
 import json
 
 #from websockets import (
@@ -69,8 +69,10 @@ face_det = predict.FaceDetector()
 
 ## webcam
 cap = cv2.VideoCapture(0)
-
-from queue import LifoQueue
+try:
+    from queue import LifoQueue
+except:
+    from Queue import LifoQueue
 last_frames_left = LifoQueue(10)
 
 def moving_average(a, n=3) :

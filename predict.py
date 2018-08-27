@@ -16,6 +16,8 @@ import tensorflow as tf
 
 #import face_detection
 import model, db_extractor
+import sys,os
+sys.path.append(os.path.expanduser('~'))
 from ai.applied.face.facenet.src.align import detect_face
 
 #   setup facenet parameters
