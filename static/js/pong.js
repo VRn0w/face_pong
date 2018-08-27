@@ -9,11 +9,11 @@ Pong = {
     height:       480,   // logical canvas height (ditto)
     wallWidth:    12,
     paddleWidth:  12,
-    paddleHeight: 60,
+    paddleHeight: 85, // was 60
     paddleSpeed:  2,     // should be able to cross court vertically   in 2 seconds
-    ballSpeed:    4,     // should be able to cross court horizontally in 4 seconds, at starting speed ...
-    ballAccel:    8,     // ... but accelerate as time passes
-    ballRadius:   5,
+    ballSpeed:    6,     // should be able to cross court horizontally in 4 seconds, at starting speed ...
+    ballAccel:    3,     // ... but accelerate as time passes , was 8
+    ballRadius:   10, // was 5
     sound:        true
   },
 
@@ -62,7 +62,10 @@ Pong = {
       this.height      = runner.height;
       this.images      = images;
       this.playing     = false;
-      this.scores      = [0, 0];
+      //this.scores      = [0, 0];
+      this.number_ballcontacts = 0;
+      this.init_number_lifes = 3;
+      this.number_lifes = this.init_number_lifes;
       this.menu        = Object.construct(Pong.Menu,   this);
       this.court       = Object.construct(Pong.Court,  this);
       this.leftPaddle  = Object.construct(Pong.Paddle, this);
@@ -79,12 +82,15 @@ Pong = {
 
   start: function(numPlayers) {
     if (!this.playing) {
-      this.scores = [0, 0];
+      //this.scores = [0, 0];
+      this.number_ballcontacts = 0;
+      this.number_lifes = this.init_number_lifes;
       this.playing = true;
       this.leftPaddle.setAuto(numPlayers < 1, this.level(0));
       this.rightPaddle.setAuto(numPlayers < 2, this.level(1));
       this.ball.reset();
       this.runner.hideCursor();
+      this.numPlayers = numPlayers;
     }
   },
 
@@ -100,11 +106,15 @@ Pong = {
   },
 
   level: function(playerNo) {
-    return 8 + (this.scores[playerNo] - this.scores[playerNo ? 0 : 1]);
+    // dolokov
+    return 4;
+    //let base_level = 4; // 8
+    //return base_level + (this.scores[playerNo] - this.scores[playerNo ? 0 : 1]);
   },
 
   goal: function(playerNo) {
     this.sounds.goal();
+    /*
     this.scores[playerNo] += 1;
     if (this.scores[playerNo] == 9) {
       this.menu.declareWinner(playerNo);
@@ -115,6 +125,22 @@ Pong = {
       this.leftPaddle.setLevel(this.level(0));
       this.rightPaddle.setLevel(this.level(1));
     }
+    */
+
+    // on each goal reset ball contacts and decrease life
+    this.number_ballcontacts = 0;
+    if(this.number_lifes == 0){
+      this.menu.declareWinner(playerNo);
+      this.number_lifes = this.init_number_lifes;
+      this.stop();
+    }
+    else{
+      this.number_lifes = this.number_lifes - 1;
+      this.ball.reset(playerNo);
+      this.leftPaddle.setLevel(this.level(0));
+      this.rightPaddle.setLevel(this.level(1));
+
+    }
   },
 
   update: function(dt) {
@@ -124,10 +150,14 @@ Pong = {
       var dx = this.ball.dx;
       var dy = this.ball.dy;
       this.ball.update(dt, this.leftPaddle, this.rightPaddle);
-      if (this.ball.dx < 0 && dx > 0)
+      if (this.ball.dx < 0 && dx > 0){
         this.sounds.ping();
-      else if (this.ball.dx > 0 && dx < 0)
+        this.number_ballcontacts = this.number_ballcontacts + 1;
+      }
+      else if (this.ball.dx > 0 && dx < 0){
         this.sounds.pong();
+        this.number_ballcontacts = this.number_ballcontacts + 1;
+      }
       else if (this.ball.dy * dy < 0)
         this.sounds.wall();
 
@@ -139,7 +169,8 @@ Pong = {
   },
 
   draw: function(ctx) {
-    this.court.draw(ctx, this.scores[0], this.scores[1]);
+    //this.court.draw(ctx, this.scores[0], this.scores[1]);
+    this.court.draw(ctx, this.number_ballcontacts, this.number_lifes);
     this.leftPaddle.draw(ctx);
     this.rightPaddle.draw(ctx);
     if (this.playing)
@@ -323,6 +354,7 @@ Pong = {
       this.speed  = (this.maxY - this.minY) / pong.cfg.paddleSpeed;
       this.setpos(rhs ? pong.width - this.width : 0, this.minY + (this.maxY - this.minY)/2);
       this.setdir(0);
+      this.min_speed_robot_update = 32;
     },
 
     setpos: function(x, y) {
@@ -449,10 +481,25 @@ Pong = {
       }
     },
 
-    moveUp:         function() { this.up   = 1; },
-    moveDown:       function() { this.down = 1; },
-    stopMovingUp:   function() { this.up   = 0; },
-    stopMovingDown: function() { this.down = 0; }
+    moveUp:         function() { 
+      this.up   = 1; 
+      console.log('moveUp',this.pong.numPlayers);
+      console.log('pong',this.pong);
+      if(this.pong.numPlayers<2){ 
+        if( this.speed > this.min_speed_robot_update ) 
+          show_robot_face(direction=0,player=1,number_ballcontacts=this.number_ballcontacts); 
+      }
+    },// 
+    moveDown:       function() { 
+      this.down = 1;
+      if(this.pong.numPlayers<2){ 
+        // show only if 
+        if( this.speed > this.min_speed_robot_update ) 
+          show_robot_face(direction=1,player=1,number_ballcontacts=this.number_ballcontacts); 
+      } 
+    },// if(this.numPlayers==0){ show_robot_face(direction=1,player=0); }},
+    stopMovingUp:   function() { this.up   = 0;show_robot_face(direction=-1,player=1,number_ballcontacts=this.number_ballcontacts);  },
+    stopMovingDown: function() { this.down = 0;show_robot_face(direction=-1,player=1,number_ballcontacts=this.number_ballcontacts);  }
 
   },
 
