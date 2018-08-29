@@ -107,7 +107,7 @@ Pong = {
 
   level: function(playerNo) {
     // dolokov
-    return 4;
+    return 12;
     //let base_level = 4; // 8
     //return base_level + (this.scores[playerNo] - this.scores[playerNo ? 0 : 1]);
   },
@@ -354,7 +354,7 @@ Pong = {
       this.speed  = (this.maxY - this.minY) / pong.cfg.paddleSpeed;
       this.setpos(rhs ? pong.width - this.width : 0, this.minY + (this.maxY - this.minY)/2);
       this.setdir(0);
-      this.min_speed_robot_update = 32;
+      this.min_speed_robot_update = 100;
     },
 
     setpos: function(x, y) {
@@ -481,7 +481,7 @@ Pong = {
       }
     },
 
-    moveUp:         function() { 
+    moveUp: function() { 
       this.up   = 1; 
       console.log('moveUp',this.pong.numPlayers);
       console.log('pong',this.pong);
@@ -490,14 +490,14 @@ Pong = {
           show_robot_face(direction=0,player=1,number_ballcontacts=this.number_ballcontacts); 
       }
     },// 
-    moveDown:       function() { 
+    moveDown: function() { 
       this.down = 1;
       if(this.pong.numPlayers<2){ 
         // show only if 
         if( this.speed > this.min_speed_robot_update ) 
           show_robot_face(direction=1,player=1,number_ballcontacts=this.number_ballcontacts); 
       } 
-    },// if(this.numPlayers==0){ show_robot_face(direction=1,player=0); }},
+    },// if(this.numPlayers==0){ show_robot_fcae(direction=1,player=0); }},
     stopMovingUp:   function() { this.up   = 0;show_robot_face(direction=-1,player=1,number_ballcontacts=this.number_ballcontacts);  },
     stopMovingDown: function() { this.down = 0;show_robot_face(direction=-1,player=1,number_ballcontacts=this.number_ballcontacts);  }
 

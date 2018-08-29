@@ -21,14 +21,14 @@
     }
     #canvas_chart_1 {
       flex:0 0 33%;
-      padding-left: 100px;
+      padding-left: 10px;
     }
     #stream {
       flex:1 0 33%;
     }
     #canvas_chart_2 {
       flex:2 0 33%;
-      padding-right: 100px
+      padding-right:  10px
     }
     #video_left {
       width: 460px;
@@ -47,27 +47,57 @@
       display: none;
     }
     #game {
-      width: 800px;
-      height: 600px;
+      width: 1000px;
+      height: 1000px;
     }
 
+    .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        
 
+    }
   </style>
   <script src="http://www.chartjs.org/dist/2.7.2/Chart.bundle.js"></script>
 </head> 
  
 <body style="padding: 0px"> 
-  <div id="wrapper">
-    <div id="container_chart_1">
-        <canvas id="canvas_chart_1"></canvas>
-    </div>
-    <div id='stream'>
+  <div id="game_wrapper">
+  <table>
+    <tr>
+      <td>  
+        <table>
+          <tr><td><img id="video_left" src="{{ url_for('video_feed_left') }}"></td></tr>
+          <tr><td><div id="container_chart_1"><canvas id="canvas_chart_1"></canvas></div></td></tr>
+          <tr><td><div style=" padding-top: 20px"><img class='center' src="{{url_for('static',filename='images/logo_nhs.jpg')}}" style="width: 250px; height: 250px"></div></td></tr>
+        </table>
+      </td>
+      <td>
+        <canvas id="game">
+          <div id="unsupported">
+            Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
+          </div>
+        </canvas>
+      </td>
+      <td>  
+        <table>
+          <tr><td><img id="video_right" src="{{ url_for('video_feed_right') }}"></td></tr>
+          <tr><td><div id="container_chart_2"><canvas id="canvas_chart_2"></canvas></div></td></tr>
+          <tr><td><div style="padding-right: 70px; padding-top: 20px"><img class='center' src="{{url_for('static',filename='images/logo_vrnow.jpg')}}" style="width: 250px; height: 250px"></div></td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>      
 
-    </div>
-    <div id="container_chart_2">
-        <canvas id="canvas_chart_2"></canvas>
-    </div>
   </div>
+  </td>
+  </tr>
+  </table>
+  
+    
+  
+
   <div id="sidebar" style="display:none">
 
     <h2>This is Pong!</h2>
@@ -97,7 +127,7 @@
 
     <div class='settings'>
       <label for='stats'>stats: </label>
-      <input type='checkbox' id='stats' checked>
+      <input type='checkbox' id='stats'>
     </div>
 
     <div class='settings'>
@@ -111,24 +141,7 @@
     </div>
 
   </div>
-  <div id="game_wrapper">
-    <img id="video_left" src="{{ url_for('video_feed_left') }}">
-        
-    <canvas id="game">
-      <div id="unsupported">
-        Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
-      </div>
-    </canvas>
-
-    <img id="video_right" src="{{ url_for('video_feed_right') }}">
-  </div>
-
-  <div id="logo_wrapper">
-    <img src="{{url_for('static',filename='images/logo_nhs.jpg')}}" style="width: 600px; height: 125px">
-    <img src="{{url_for('static',filename='images/logo_vrnow.jpg')}}" style="width: 250px; height: 250px">
-    <img src="{{url_for('static',filename='images/logo_km.jpg')}}" style="width: 600px; height: 125px">
-  </div>
-
+  
   <script type="text/javascript">
     // images
     var url_press1 = "{{ url_for('static', filename='images/press1.png') }}";
@@ -205,7 +218,6 @@
           legend: {display: false}
         }
       });
-
       var ctx2 = document.getElementById('canvas_chart_2').getContext('2d');
       window.chart_right = new Chart(ctx2, {
         type: 'horizontalBar',
@@ -301,14 +313,17 @@
   };
   let date = new Date();
   function show_robot_face(direction=0,player=0,number_ballcontacts = 0){
-    let icon_ids = ['sads','surpriseds','angrys'];
+    //let icon_ids = ['sads','surpriseds','angrys'];
+    let icon_ids = ['surpriseds'];
     // direction 0 == up
     if(direction==0){
       // up faces are happy 
       icon_ids = ['twinks','happys','smiles'];
+      icon_ids = ['happys'];
     }
     if(direction==-1){
       icon_ids = ['neutrals','neutrals','neutrals'];
+      icon_ids = ['neutrals'];
     }
     // take random emotion image
     //let icon_id = icon_ids[Math.floor(Math.random() * icon_ids.length)  ];
@@ -318,11 +333,15 @@
     //let icon_id = icon_ids[time_idx];
 
     // take number of ball contacts mod number images
-    let icon_id = icon_ids[ number_ballcontacts % 3 ];
+    //let icon_id = icon_ids[ number_ballcontacts % 3 ];
 
-    // change url of image for new image
-    imgs[player].src = robot_urls[icon_id];
-    //console.log('[ROBOT] change icon for player',player,'to',icon_id,'(',robot_urls[icon_id],')');
+    let should_change = direction >= 0;
+    if(should_change){
+      let icon_id = icon_ids[0];
+      // change url of image for new image
+      imgs[player].src = robot_urls[icon_id];
+      //console.log('[ROBOT] change icon for player',player,'to',icon_id,'(',robot_urls[icon_id],')');
+    }
   }
 
   </script>  
