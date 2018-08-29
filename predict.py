@@ -30,7 +30,7 @@ factor = 0.709 # scale factor
 
 
 class FaceDetector(object):
-    def __init__(self, backend="dlib", padding=30, resize_size=(160,160)):
+    def __init__(self, backend="dlib", padding=30, resize_size=(160,160), no_face_after=10):
         self.backend = backend
         self.padding = padding
         self.resize_size = resize_size
@@ -40,7 +40,9 @@ class FaceDetector(object):
         elif backend == "dlib":
             self.detector = dlib.get_frontal_face_detector()
         self.face_crops = deque(maxlen=10)
-
+        self.no_face_after = no_face_after # when no face is detected take last frame and return no face after no_face_after frames
+        self.last_faces = []
+        self.no_faces_counter = no_face_after
 
     def load_facenet_model(self):
         with tf.Graph().as_default():
@@ -131,7 +133,7 @@ class FaceDetector(object):
         percentage_of_image =  (total_area - (w * h)) / total_area
         percentage_of_image = 1.0 - percentage_of_image 
         p = int(self.padding * percentage_of_image * 4.5) + p_face
-        o = int(20 * percentage_of_image * 4.5)
+        o = int(30 * percentage_of_image * 4.5)
         
         x1, y1, x2, y2 = self.add_padding(x1, y1, x2, y2, p)
         x1, y1, x2, y2 = self.move_with_offset(x1, y1, x2, y2, o)
@@ -176,8 +178,24 @@ class FaceDetector(object):
             result.append(box_results)
             
         #result = result[:min(len(result),max_num)]             
-        result = self.get_middle_faces(img, result, max_num)
-        return result
+        # result = self.get_middle_faces(img, result, max_num)
+        result = self.sort_faces(img, result, max_num)
+        if self.no_faces_counter > 0 and len(result) != max_num:
+            self.no_faces_counter -= 1
+            return self.last_faces
+        else:
+            self.last_faces = result
+            self.no_faces_counter = self.no_face_after
+            return result
+    
+
+    def sort_faces(self, img, results, max_num):
+        xcenter, ycenter = int(img.shape[1] / 2.0), int(img.shape[0] / 2.0)
+        boxes = [r["bbox"] for r in results]
+        boxes_center = [[ int((b[0] + b[2]) / 2.) , int((b[1] + b[3]) / 2.) ] for b in boxes]
+        boxes_diff = [abs(center[0] - xcenter) + abs(center[1] - ycenter) for center in boxes_center]
+        idxs = np.argsort(boxes_diff)
+        return [results[i] for i in idxs][:max_num]
 
 class FaceExpressionExtractor(object):
     def __init__(self):
