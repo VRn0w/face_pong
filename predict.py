@@ -169,6 +169,14 @@ class FaceDetector(object):
         bounding_boxes, _ = detect_face.detect_face(
                 img, minsize, self.pnet,
                 self.rnet, self.onet, threshold, factor)
+        
+        if self.no_faces_counter > 0 and len(bounding_boxes) != max_num:
+            self.no_faces_counter -= 1
+            bounding_boxes = self.last_faces
+        else:
+            self.last_faces = bounding_boxes
+            self.no_faces_counter = self.no_face_after
+
         result = []
         #   for each box
         for (x1, y1, x2, y2, acc) in bounding_boxes:
@@ -180,13 +188,7 @@ class FaceDetector(object):
         #result = result[:min(len(result),max_num)]             
         # result = self.get_middle_faces(img, result, max_num)
         result = self.sort_faces(img, result, max_num)
-        if self.no_faces_counter > 0 and len(result) != max_num:
-            self.no_faces_counter -= 1
-            return self.last_faces
-        else:
-            self.last_faces = result
-            self.no_faces_counter = self.no_face_after
-            return result
+        return result
     
 
     def sort_faces(self, img, results, max_num):
