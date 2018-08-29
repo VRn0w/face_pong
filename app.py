@@ -50,8 +50,15 @@ def index():
 def add_crops(img,bounding_boxes):
     for i,bb in enumerate(bounding_boxes):
         [x1,y1,x2,y2] = bounding_boxes[i]['bbox']
+        
+
         # crop
         crop = img[y1:y2,x1:x2]
+        ## to get from celebA to emotion dataset, crop the center
+        h, w = y2-y1,x2-x1
+        m = int(0.2 * (x2-x1))
+        crop = crop[m:-m,m:-m]
+        
         if crop is not None and crop.shape[0]>0 and crop.shape[1]>0:
             # resize to 160x160 
             if crop.shape[0] < 160: ## shrinking
