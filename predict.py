@@ -39,7 +39,7 @@ class FaceDetector(object):
             self.load_facenet_model()
         elif backend == "dlib":
             self.detector = dlib.get_frontal_face_detector()
-        self.face_crops = deque(maxlen=15)
+        self.face_crops = deque(maxlen=10)
 
 
     def load_facenet_model(self):
@@ -127,7 +127,6 @@ class FaceDetector(object):
         # padding for bigger roi
         p_face = ((w / float(h)) - basic_ratio) * 200
         p_face = int(p_face)
-        print(p_face)
         total_area = float(img.shape[0] * img.shape[1])
         percentage_of_image =  (total_area - (w * h)) / total_area
         percentage_of_image = 1.0 - percentage_of_image 
@@ -139,10 +138,12 @@ class FaceDetector(object):
 
         self.face_crops.appendleft((x1, y1, x2, y2))
 
-        if self.face_crops.count == self.face_crops.maxlen:
+        if len(self.face_crops) == self.face_crops.maxlen:
             crops = np.asarray(self.face_crops)
-            crop = np.mean(crops)
-            x1, y1, x2, y2 = crop
+            crop = np.mean(crops, axis=0)
+            crop = crop.astype(np.int32)
+            x1, y1, x2, y2 = list(crop)
+            # print("Get the mean %s" % crop)
             
 
         # crop
