@@ -14,6 +14,7 @@ import numpy as np
 import cv2
 import tensorflow as tf 
 import dlib
+from collections import deque
 
 #import face_detection
 import model, db_extractor
@@ -29,13 +30,17 @@ factor = 0.709 # scale factor
 
 
 class FaceDetector(object):
-    def __init__(self, backend="dlib"):
+    def __init__(self, backend="dlib", padding=30, resize_size=(160,160)):
         self.backend = backend
+        self.padding = padding
+        self.resize_size = resize_size
         print("using backend %s" % backend)
         if backend == "facenet":
             self.load_facenet_model()
         elif backend == "dlib":
             self.detector = dlib.get_frontal_face_detector()
+        self.face_crops = deque(maxlen=10)
+
 
     def load_facenet_model(self):
         with tf.Graph().as_default():
@@ -90,8 +95,23 @@ class FaceDetector(object):
 
         return middle_faces
 
+    def move_with_offset(self, x1, y1, x2, y2, offset=100):
+        x1_n = (x1 - offset) if  (x1 - offset) > 0 else 0
+        y1_n = (y1 - offset) if  (y1 - offset) > 0 else 0
+        x1_diff = x1 - x1_n
+        y1_diff = y1 - y1_n
+        y2 = y2 - y1_diff
+        x2 = x2 - x1_diff
+        return x1_n, y1_n, x2, y2
 
-    def get_faces_from_bounding_box(self, img, box, padding=30):
+    def add_padding(self, x1, y1, x2, y2, p=100):
+        x1 -= p
+        y1 -= p
+        x2 += p
+        y2 += p
+        return x1, y1, x2, y2
+
+    def get_faces_from_bounding_box(self, img, box, basic_ratio=0.70):
         # make square
         [x1,y1,x2,y2] = box
         w = x2-x1
@@ -103,25 +123,40 @@ class FaceDetector(object):
         else:
             y1-=dif//2
             y2+=dif//2
-
+        
         # padding for bigger roi
-        p = 30
-        x1 -= p
-        y1 -= p
-        x2 += p
-        y2 += p
+        p_face = ((w / float(h)) - basic_ratio) * 200
+        p_face = int(p_face)
+        total_area = float(img.shape[0] * img.shape[1])
+        percentage_of_image =  (total_area - (w * h)) / total_area
+        percentage_of_image = 1.0 - percentage_of_image 
+        p = int(self.padding * percentage_of_image * 4.5) + p_face
+        o = int(20 * percentage_of_image * 4.5)
+        
+        x1, y1, x2, y2 = self.add_padding(x1, y1, x2, y2, p)
+        x1, y1, x2, y2 = self.move_with_offset(x1, y1, x2, y2, o)
+
+        self.face_crops.appendleft((x1, y1, x2, y2))
+
+        if len(self.face_crops) == self.face_crops.maxlen:
+            crops = np.asarray(self.face_crops)
+            crop = np.mean(crops, axis=0)
+            crop = crop.astype(np.int32)
+            x1, y1, x2, y2 = list(crop)
+            # print("Get the mean %s" % crop)
+            
 
         # crop
         results = []
         crop = img[y1:y2,x1:x2]
         if crop is not None and crop.shape[0]>0 and crop.shape[1]>0:
             # resize to 160x160 
-            if crop.shape[0] < 160: ## shrinking
+            if crop.shape[0] < self.resize_size[0]: ## shrinking
                 interpolation = cv2.INTER_CUBIC
             else:
                 interpolation = cv2.INTER_AREA
             #print('before',crop.shape)
-            crop = cv2.resize(crop,(160,160), interpolation = interpolation )
+            crop = cv2.resize(crop, self.resize_size, interpolation = interpolation )
             
             return {'bbox': [x1,y1,x2,y2], 'crop':crop}
         else:
