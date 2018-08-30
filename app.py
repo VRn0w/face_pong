@@ -22,24 +22,10 @@ app = Flask(__name__)
 #from flask_socketio import send, emit
 import json
 
-#from websockets import (
-#      handle_client_connect_event,
-#)
+collage_dir = '/data/collage/'
+if not os.path.isdir(collage_dir): os.makedirs(collage_dir)
 
-#### https://tutorials.technology/tutorials/61-Create-an-application-with-websockets-and-flask.html
-"""
-@socketio.on('client_connected')
-def handle_client_connect_event(json):
-    #global 
-    print('received jsonx: {0}'.format(str(json)))
-
-@socketio.on('message')
-def handle_json_button(json):
-    print('[*] handle_json_button',json)
-    # it will forward the json to all clients.
-    with mutex:
-        socketio.send(last_frame, json=True)
-"""
+image_dir = os.path.expanduser('~/face_pong/static/images')
 
 @app.route('/')
 def index():
@@ -77,10 +63,14 @@ face_det = predict.FaceDetector()
 ## webcam
 cap = cv2.VideoCapture(0)
 try:
-    from queue import LifoQueue
+    from queue import LifoQueue, PriorityQueue
 except:
-    from Queue import LifoQueue
+    from Queue import LifoQueue, PriorityQueue
 last_frames_left = LifoQueue(10)
+
+max_face_crops_collage = 2
+queues_left = [PriorityQueue(maxsize=max_face_crops_collage) for _ in range(6)]
+queues_right = [PriorityQueue(maxsize=max_face_crops_collage) for _ in range(6)]
 
 def moving_average(a, n=3) :
     ret = np.cumsum(a, dtype=float)
@@ -97,16 +87,17 @@ def gen_right():
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
 
 def gen():
-    global last_frame, img_right
+    global last_frame, img_right, queues_left,queues_right
     """Video streaming generator function."""
     while True:
+        time.sleep(1. / 35.)
         try:
             _, im = cap.read()
             faces = face_det.detect_faces(im,max_num=2)
+            #print('[*] found %d faces' % len(faces))
             bounding_boxes = add_crops(im,faces)
             face_expressions = face_expression_extractor.get_face_expression_vectors(bounding_boxes)
-            #print('faces',[f['bbox'] for f in faces])
-            #print(face_expressions)
+
             ## combine face crops
             face_crops = [f['crop'] for f in bounding_boxes]
             c = np.zeros((160,320,3),np.uint8)
@@ -114,14 +105,6 @@ def gen():
                 img_left = np.fliplr(bounding_boxes[0]['crop'])
             else:
                 img_left = np.zeros(shape=(160, 160, 3))
-            """
-            if last_frames_left.full() == 10:
-                last_frames_left.pop()
-                last_frames_left.put(img_left)
-                #img_left = moving_average(img_left, 10)
-            else:
-                last_frames_left.put(img_left)
-            """
             
             with stream_mutex:
                 if len(bounding_boxes) > 1:
@@ -135,22 +118,20 @@ def gen():
             #face_im = np.hstack(face1,face2)
 
             with mutex:
-                last_frame = face_expressions
+                last_frame = {'face_expressions':face_expressions}
+                if len(bounding_boxes) > 0:# and False:
+                    for i in range(6): # dont add neutral faces
+                        if face_expressions[0][i] > 0.3:
+                            if queues_left[i].full(): queues_left[i].get(0)
+                            queues_left[i].put((1. - face_expressions[0][i],img_left))
 
-
-            try:
-                #with Flask.test_request_context(app) as trc:
-                data = face_expressions.reshape((-1,7)).tolist()
-                #socketio.send(data, json=True)
-            except Exception as e:
-                print(e)
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
         except Exception as e:
-            print(e)
-#websocket 
-#    send emotion_vectors
+            #print(e)
+            ''
+
 
 @app.route('/video_feed_left')
 def video_feed_left():
@@ -170,35 +151,38 @@ def expressions():
     global last_frame
     with mutex:
         if last_frame is not None:
-            return json.dumps(last_frame.reshape((-1,7)).tolist())
+            return json.dumps(last_frame['face_expressions'].reshape((-1,7)).tolist())
             #return np.array2string(last_frame)
         else:
             return ""
         last_frame = None
 
+@app.route("/print_bestof")
+def print_best_of():
+    # make collage of most expressive face crops
+    file_collage = os.path.join(collage_dir,'%d.jpg'%int(np.random.uniform() * 1e5))
 
-"""
-import asyncio
-import websockets
+    collage = 255 * np.ones((2,160,3),np.uint8)
+    for i in range(6):
+        if not queues_left[i].empty():
+            act,p = queues_left[i].get(0)
+            collage = np.vstack((collage,p,255*np.ones((2,160,3),np.uint8)))
 
-async def hello(websocket, path):
-    name = await websocket.recv()
-    print('openend',name)
-    #print("< {name}")
-
-    #greeting = f"Hello {name}!"
-
-    await websocket.send('greeting')
-    print('sent succ')
-
-start_server = websockets.serve(hello, 'localhost', 6000)
-
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
-"""
+    ## add logos
+    if True:
+        logo0 = cv2.imread(os.path.join(image_dir,'logo_vrnow.jpg'))
+        logo1 = cv2.imread(os.path.join(image_dir,'logo_nhs.jpg'))
+        logo0 = cv2.resize(logo0,(160,160))
+        collage = np.vstack((collage,np.zeros((2,160,3),np.uint8),logo0))
+    cv2.imwrite(file_collage,collage)
+    print('[*] saved collage to disk')
+    return file_collage
 
 if __name__ == '__main__':
 
-    
-    
+    if True:
+        import logging
+        log = logging.getLogger('werkzeug')    
+        log.setLevel(logging.ERROR)
     app.run(host='0.0.0.0', threaded=True)
+
