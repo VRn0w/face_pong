@@ -5,10 +5,11 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='semantic.min.css') }}">
   <link href="{{ url_for('static', filename='pong.css') }}" media="screen, print" rel="stylesheet" type="text/css" /> 
-  <script
+  <!--<script
     src="https://code.jquery.com/jquery-3.1.1.min.js"
     integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-    crossorigin="anonymous"></script>
+    crossorigin="anonymous"></script>-->
+  <script src="{{ url_for('static', filename='js/jquery-3.1.1.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/semantic.min.js') }}"></script>
   <style>
     img { 
@@ -283,21 +284,14 @@
     }
 
     getExpressions();
-    /*
-    var socket = io.connect('http://' + 'localhost' + ':' + 5000);
-    socket.on('connect', function() {
-        // we emit a connected message to let knwo the client that we are connected.
-        //socket.emit('client_connected', {data: 'New client!'});
-        socket.send('json_button', {message: "test"});
-    });
-    socket.on('message', function (data) {
-        console.log('message from backend ' + data);
+    
+    async function printCollage() {
+        await sleep(100);
+        $.get("print_bestof", function(data) {
+          console.log('[*] printed collage',data);
+        });
+    }
 
-        // request new frame
-        socket.send('json_button', {message: "test"});
-    });
-    */
-    //let ws = new WebSocket('ws://localhost:6000');
 
   let img_left = document.getElementById('video_left');
   let img_right = document.getElementById('video_right');
