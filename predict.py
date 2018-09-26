@@ -53,13 +53,29 @@ class FaceDetector(object):
             self.sess_detect = sess_detect
             self.pnet, self.rnet, self.onet = detect_face.create_mtcnn( self.sess_detect, None)
 
-    def detect_faces(self, img, max_num):
+    def detect_faces(self, img, max_num, crop=None):
+        y,x = img.shape[:2]
+        if crop is not None:
+            startx = x//2-(crop[0]//2)
+            starty = y//2-(crop[1]//2)
+            img = img[starty:starty+crop[1],startx:startx+crop[0], :]
+
         if self.backend == "dlib":
-            return self.detect_faces_dlib(img, max_num)
+            faces = self.detect_faces_dlib(img, max_num)
         elif self.backend == "facenet":
-            return self.detect_faces_facenet(img, max_num)
+            faces = self.detect_faces_facenet(img, max_num)
         else:
             raise Exception("Could not find backend %s" % self.backend)
+        
+        if crop is not None:
+            for i, face in enumerate(faces):
+                bbox = face['bbox']
+                bbox[0] += startx
+                bbox[2] += startx
+                bbox[1] += starty
+                bbox[3] += starty
+                faces[i]['bbox'] = bbox
+        return faces
 
     def detect_faces_dlib(self, img, max_num):
         results = []
