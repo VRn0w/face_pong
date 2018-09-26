@@ -185,6 +185,7 @@ Pong = {
       case Game.KEY.ONE:  this.startSinglePlayer();    break;
       case Game.KEY.TWO:  this.startDoublePlayer();    break;
       case Game.KEY.ESC:  this.stop(true);             break;
+      case Game.KEY.SPACE:printCollage(); break;
       case Game.KEY.Q:    if (!this.leftPaddle.auto)  this.leftPaddle.moveUp();    break;
       case Game.KEY.A:    if (!this.leftPaddle.auto)  this.leftPaddle.moveDown();  break;
       case Game.KEY.P:    if (!this.rightPaddle.auto) this.rightPaddle.moveUp();   break;
@@ -483,8 +484,8 @@ Pong = {
 
     moveUp: function() { 
       this.up   = 1; 
-      console.log('moveUp',this.pong.numPlayers);
-      console.log('pong',this.pong);
+      //console.log('moveUp',this.pong.numPlayers);
+      //console.log('pong',this.pong);
       if(this.pong.numPlayers<2){ 
         if( this.speed > this.min_speed_robot_update ) 
           show_robot_face(direction=0,player=1,number_ballcontacts=this.number_ballcontacts); 
