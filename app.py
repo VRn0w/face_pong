@@ -58,7 +58,7 @@ def add_crops(img,bounding_boxes):
 
 import predict,db_extractor
 face_expression_extractor = predict.FaceExpressionExtractor()
-face_det = predict.FaceDetector()
+face_det = predict.FaceDetector(no_face_after = 1)
 
 ## webcam
 cap = cv2.VideoCapture(0)
@@ -184,5 +184,5 @@ if __name__ == '__main__':
         import logging
         log = logging.getLogger('werkzeug')    
         log.setLevel(logging.ERROR)
-    app.run(host='0.0.0.0', threaded=True)
+    app.run(host='0.0.0.0', threaded=True,port=5000)
 
