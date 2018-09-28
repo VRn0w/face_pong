@@ -147,9 +147,11 @@ Pong = {
       }else{
         this.menu.declareWinner(playerNo);
         this.number_lifes = this.init_number_lifes;
-        this.stop();
-
         // show email formular
+        open_email_modal();
+        
+        this.stop();
+        this.start(0);1
       }
     }
     else{
@@ -506,7 +508,7 @@ Pong = {
       //console.log('moveUp',this.pong.numPlayers);
       //console.log('pong',this.pong);
       //console.log('paddle',this);
-      console.log('which paddle',this.rhs);
+      //console.log('which paddle',this.rhs);
       // which player?
       let playerid = 0;
       if(this.rhs) playerid = 1;
