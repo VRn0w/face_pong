@@ -179,6 +179,7 @@
     Game.addEvent(footprints,  'change', function() { pong.showFootprints(footprints.checked);   });
     Game.addEvent(predictions, 'change', function() { pong.showPredictions(predictions.checked); });
 
+
   });
   </script>
   <!--<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>-->
@@ -292,7 +293,8 @@
         });
     }
 
-
+  let url_video_left = "{{ url_for('video_feed_left') }}";
+  let url_video_right = "{{ url_for('video_feed_right') }}";
   let img_left = document.getElementById('video_left');
   let img_right = document.getElementById('video_right');
   let imgs = [img_left,img_right];
@@ -307,6 +309,7 @@
   };
   let date = new Date();
   function show_robot_face(direction=0,player=0,number_ballcontacts = 0){
+    //console.log('[show_robot_face]',direction,player,number_ballcontacts);
     //let icon_ids = ['sads','surpriseds','angrys'];
     let icon_ids = ['surpriseds'];
     // direction 0 == up

@@ -73,6 +73,7 @@ Pong = {
       this.ball        = Object.construct(Pong.Ball,   this);
       this.sounds      = Object.construct(Pong.Sounds, this);
       this.runner.start();
+      this.start(0);
     }.bind(this));
   },
 
@@ -81,7 +82,9 @@ Pong = {
   startDoublePlayer: function() { this.start(2); },
 
   start: function(numPlayers) {
-    if (!this.playing) {
+    //if (!this.playing) {
+    if(true){
+      console.log('[*] starting game with players',numPlayers);
       //this.scores = [0, 0];
       this.number_ballcontacts = 0;
       this.number_lifes = this.init_number_lifes;
@@ -91,6 +94,15 @@ Pong = {
       this.ball.reset();
       this.runner.hideCursor();
       this.numPlayers = numPlayers;
+
+      if(numPlayers==1){
+        img_left.src = url_video_left;
+      }
+      if(numPlayers==2){
+        img_left.src = url_video_left;
+        img_right.src = url_video_right;
+      }
+
     }
   },
 
@@ -130,9 +142,15 @@ Pong = {
     // on each goal reset ball contacts and decrease life
     this.number_ballcontacts = 0;
     if(this.number_lifes == 0){
-      this.menu.declareWinner(playerNo);
-      this.number_lifes = this.init_number_lifes;
-      this.stop();
+      if(this.numPlayers==0){
+        this.start(0);
+      }else{
+        this.menu.declareWinner(playerNo);
+        this.number_lifes = this.init_number_lifes;
+        this.stop();
+
+        // show email formular
+      }
     }
     else{
       this.number_lifes = this.number_lifes - 1;
@@ -346,7 +364,7 @@ Pong = {
 
   Paddle: {
 
-    initialize: function(pong, rhs) {
+    initialize: function(pong, rhs=false) {
       this.pong   = pong;
       this.width  = pong.cfg.paddleWidth;
       this.height = pong.cfg.paddleHeight;
@@ -356,6 +374,7 @@ Pong = {
       this.setpos(rhs ? pong.width - this.width : 0, this.minY + (this.maxY - this.minY)/2);
       this.setdir(0);
       this.min_speed_robot_update = 100;
+      this.rhs = rhs;
     },
 
     setpos: function(x, y) {
@@ -486,21 +505,48 @@ Pong = {
       this.up   = 1; 
       //console.log('moveUp',this.pong.numPlayers);
       //console.log('pong',this.pong);
-      if(this.pong.numPlayers<2){ 
+      //console.log('paddle',this);
+      console.log('which paddle',this.rhs);
+      // which player?
+      let playerid = 0;
+      if(this.rhs) playerid = 1;
+      
+      if(this.pong.numPlayers==0){ 
+        if( this.speed > this.min_speed_robot_update ) 
+          show_robot_face(direction=0,player=playerid,number_ballcontacts=this.number_ballcontacts); 
+      }
+      if(this.pong.numPlayers==1 && playerid==1){ 
         if( this.speed > this.min_speed_robot_update ) 
           show_robot_face(direction=0,player=1,number_ballcontacts=this.number_ballcontacts); 
       }
     },// 
     moveDown: function() { 
       this.down = 1;
-      if(this.pong.numPlayers<2){ 
-        // show only if 
+      // which player?
+      let playerid = 0;
+      if(this.rhs) playerid = 1;
+      
+      if(this.pong.numPlayers==0){ 
+        if( this.speed > this.min_speed_robot_update ) 
+          show_robot_face(direction=1,player=playerid,number_ballcontacts=this.number_ballcontacts); 
+      }
+      if(this.pong.numPlayers==1 && playerid==1){ 
         if( this.speed > this.min_speed_robot_update ) 
           show_robot_face(direction=1,player=1,number_ballcontacts=this.number_ballcontacts); 
-      } 
+      }
     },// if(this.numPlayers==0){ show_robot_fcae(direction=1,player=0); }},
-    stopMovingUp:   function() { this.up   = 0;show_robot_face(direction=-1,player=1,number_ballcontacts=this.number_ballcontacts);  },
-    stopMovingDown: function() { this.down = 0;show_robot_face(direction=-1,player=1,number_ballcontacts=this.number_ballcontacts);  }
+    stopMovingUp:   function() { 
+      this.up   = 0;
+      let playerid = 0;
+      if(this.rhs) playerid = 1;      
+      show_robot_face(direction=-1,player=playerid,number_ballcontacts=this.number_ballcontacts);  
+    },
+    stopMovingDown: function() { 
+      this.down = 0;
+      let playerid = 0;
+      if(this.rhs) playerid = 1;
+      show_robot_face(direction=-1,player=playerid,number_ballcontacts=this.number_ballcontacts);  
+    }
 
   },
 
