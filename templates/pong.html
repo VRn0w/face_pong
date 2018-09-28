@@ -3,14 +3,14 @@
 <head>
   <title>Pong!</title> 
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='semantic.min.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='semantic/semantic.min.css') }}">
   <link href="{{ url_for('static', filename='pong.css') }}" media="screen, print" rel="stylesheet" type="text/css" /> 
   <!--<script
     src="https://code.jquery.com/jquery-3.1.1.min.js"
     integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
     crossorigin="anonymous"></script>-->
   <script src="{{ url_for('static', filename='js/jquery-3.1.1.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/semantic.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='semantic/semantic.min.js') }}"></script>
   <style>
     img { 
       width: 360px; 
@@ -69,7 +69,8 @@
     <tr>
       <td>  
         <table>
-          <tr><td><img id="video_left" src="{{ url_for('video_feed_left') }}"></td></tr>
+          <!--<tr><td><img id="video_left" src="{{ url_for('video_feed_left') }}"></td></tr>-->
+          <tr><td><img id="video_left"></td></tr>
           <tr><td><div id="container_chart_1"><canvas id="canvas_chart_1"></canvas></div></td></tr>
           <tr><td><div style=" padding-top: 20px"><img class='center' src="{{url_for('static',filename='images/logo_nhs.jpg')}}" style="width: 250px; height: 250px"></div></td></tr>
         </table>
@@ -83,7 +84,8 @@
       </td>
       <td>  
         <table>
-          <tr><td><img id="video_right" src="{{ url_for('video_feed_right') }}"></td></tr>
+          <!--<tr><td><img id="video_right" src="{{ url_for('video_feed_right') }}"></td></tr>-->
+          <tr><td><img id="video_right"></td></tr>
           <tr><td><div id="container_chart_2"><canvas id="canvas_chart_2"></canvas></div></td></tr>
           <tr><td><div style="padding-right: 70px; padding-top: 20px"><img class='center' src="{{url_for('static',filename='images/logo_vrnow.jpg')}}" style="width: 250px; height: 250px"></div></td></tr>
         </table>
@@ -307,6 +309,8 @@
     'angrys': "{{ url_for('static', filename='images/robot/angrys.jpg') }}",
     'neutrals': "{{ url_for('static', filename='images/robot/questionmarks.jpg') }}",
   };
+  img_left.src = robot_urls['happys'];
+  img_right.src = robot_urls['happys'];
   let date = new Date();
   function show_robot_face(direction=0,player=0,number_ballcontacts = 0){
     //console.log('[show_robot_face]',direction,player,number_ballcontacts);
@@ -342,6 +346,136 @@
   }
 
   </script>  
+<div class="ui modal transition hidden" id='email-modal'>
+        <div class="ui icon header">
+            <i class="archive icon"></i>
+            Email Formular
+        </div>
+        <div class="content">
+            <img class="ui medium centered image" id='print_best_of' style="padding-bottom: 50px">
+            <form class="ui form" id='email-form'>
+                <div class="field">
+                    <label>Name</label>
+                    <div class="two fields">
+                        <div class="field">
+                            <input type="text" name="email[first-name]" id='email-first-name' placeholder="First Name">
+                        </div>
+                        <div class="field">
+                            <input type="text" name="email[last-name]" id='email-last-name' placeholder="Last Name">
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <div class="field">
+                        <input type="email" name="email[email]" id='email-email' placeholder="Email">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Company</label>
+                    <div class="field">
+                        <input type="text" name="email[company]" id='email-company' placeholder="Company">
+                    </div>
+                </div>
+            </form>
+            <div class="ui hidden icon message" id='email-loading-message'>
+                <i class="notched circle loading icon"></i>
+                <div class="content">
+                    <div class="header">
+                    Just one second
+                    </div>
+                    <p>We're were sending the email for you.</p>
+                </div>
+            </div>
+            <div class="ui hidden positive message" id='email-positive-message'>
+                <div class="header">
+                    Email was send
+                </div>
+                <p>Please check your emails now</p>
+            </div>
+            <div class="ui hidden negative message" id='email-negative-message'>
+                <div class="header">
+                    We're sorry
+                </div>
+                <p>We encountered a problem while sending the email, please verify your name, email and company.</p>
+            </div>
 
+
+        </div>
+        <div class="actions">
+            <div class="ui red basic cancel button">
+                <i class="remove icon"></i>
+                Cancel
+            </div>
+            <div class="ui green ok button">
+                <i class="checkmark icon"></i>
+                Send
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+    function open_email_modal() {
+        console.log("opening modal...");
+        document.getElementById('email-first-name').value = "";
+        document.getElementById('email-last-name').value = "";
+        document.getElementById('email-email').value = "";
+        document.getElementById('email-company').value = "";
+
+        $.get('/print_best_of').done(function(){
+            $('#print_best_of').attr('src', 'static/bestof.png?' + (new Date()).getTime());
+            $('.ui.modal')
+            .modal({
+                closable: false,
+                blurring: true,
+                onDeny: function(){
+                    modal_cleanup();
+                    return true;
+                },
+                onApprove : function() {
+                    $('#email-positive-message').addClass('hidden');
+                    $('#email-negative-message').addClass('hidden');
+                    $('#email-loading-message').removeClass('hidden');
+                    send_email();
+                    return false;
+                }
+            })
+            .modal('show')
+            ;
+        });
+    }
+    
+    function modal_cleanup() {
+        $('#email-positive-message').addClass('hidden');
+        $('#email-negative-message').addClass('hidden');
+        $('#email-loading-message').addClass('hidden');
+        $('#email-modal').modal('hide');
+    }
+
+    function sleep (time) {
+        return new Promise((resolve) => setTimeout(resolve, time));
+    }
+    
+    function send_email() {
+        let name = document.getElementById('email-first-name').value + ' ' + document.getElementById('email-last-name').value;
+        let email = document.getElementById('email-email').value;
+        let company = document.getElementById('email-company').value;
+
+        $.post( "/email", {name: name, email: email, company: company})
+            .done(function(data) {
+                $('#email-negative-message').addClass('hidden');
+                $('#email-loading-message').addClass('hidden');
+                $('#email-positive-message').removeClass('hidden');
+                sleep(2000).then(function() {
+                    modal_cleanup();
+                });
+            })
+            .fail(function(data) {
+                $('#email-loading-message').addClass('hidden');
+                $('#email-negative-message').removeClass('hidden');
+                $('#email-positive-message').addClass('hidden');
+            });
+    }
+</script>
 </body> 
 </html>
