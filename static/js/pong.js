@@ -9,7 +9,7 @@ Pong = {
     height:       480,   // logical canvas height (ditto)
     wallWidth:    12,
     paddleWidth:  12,
-    paddleHeight: 85, // was 60
+    paddleHeight: 125, // was 60
     paddleSpeed:  2,     // should be able to cross court vertically   in 2 seconds
     ballSpeed:    6,     // should be able to cross court horizontally in 4 seconds, at starting speed ...
     ballAccel:    3,     // ... but accelerate as time passes , was 8
