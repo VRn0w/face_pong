@@ -70,6 +70,9 @@ class FaceDetector(object):
         else:
             raise Exception("Could not find backend %s" % self.backend)
         
+        boxes = self.sort_faces(img, boxes, max_num)
+
+
         if crop is not None:
             for i, bbox in enumerate(boxes):
                 bbox[0] += startx
@@ -172,17 +175,18 @@ class FaceDetector(object):
         o = int(30 * percentage_of_image * 6)
         # print("adding padding %d and offset %d" % (p, o))
         x1, y1, x2, y2 = self.add_padding(x1, y1, x2, y2, p)
-        x1, y1, x2, y2 = self.move_with_offset(x1, y1, x2, y2, o)
+        #x1, y1, x2, y2 = self.move_with_offset(x1, y1, x2, y2, o)
 
         self.face_crops.appendleft((x1, y1, x2, y2))
 
+        '''
         if len(self.face_crops) == self.face_crops.maxlen:
             crops = np.asarray(self.face_crops)
             crop = np.mean(crops, axis=0)
             crop = crop.astype(np.int32)
             x1, y1, x2, y2 = list(crop)
             # print("Get the mean %s" % crop)
-            
+        '''    
         return self.make_square([x1, y1, x2, y2], shape)
     
     def get_crop(self, bbox, img):
@@ -224,7 +228,7 @@ class FaceDetector(object):
             
         #result = result[:min(len(result),max_num)]             
         # result = self.get_middle_faces(img, result, max_num)
-        result = self.sort_faces(img, result, max_num)
+        #result = self.sort_faces(img, result, max_num)
 
         # returns only the boxes
         return result
@@ -232,10 +236,14 @@ class FaceDetector(object):
 
     def sort_faces(self, img, boxes, max_num):
         xcenter, ycenter = int(img.shape[1] / 2.0), int(img.shape[0] / 2.0)
-        boxes_center = [[ int((b[0] + b[2]) / 2.) , int((b[1] + b[3]) / 2.) ] for b in boxes]
-        boxes_diff = [abs(center[0] - xcenter) + abs(center[1] - ycenter) for center in boxes_center]
-        idxs = np.argsort(boxes_diff)
-        return [boxes[i] for i in idxs][:max_num]
+        boxes_center = [ int((b[0] + b[2]) / 2.)  for b in boxes]
+        
+        #boxes_center = [[ int((b[0] + b[2]) / 2.) , int((b[1] + b[3]) / 2.) ] for b in boxes]
+        #boxes_diff = [abs(center[0] - xcenter) + abs(center[1] - ycenter) for center in boxes_center]
+        #idxs = np.argsort(boxes_diff)
+        idxs = np.argsort(boxes_center)
+
+        return reversed([boxes[i] for i in idxs][:max_num])
 
 class FaceExpressionExtractor(object):
     def __init__(self):
